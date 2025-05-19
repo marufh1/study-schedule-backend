@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put } from "@nestjs/common";
 import { User } from "./user.schema";
 import { UserService } from "./users.service";
 
@@ -17,8 +17,16 @@ export class UserController {
   }
 
   @Post()
-  create(@Body() user: Partial<User>): Promise<User | null> {
-    return this.userService.create(user);
+  async create(@Body() createUserDto: Partial<User>) {
+    try {
+      return await this.userService.create(createUserDto);
+    } catch (error) {
+      console.log("Error in controller:", error);
+      if (error.message === "Email already exists" || (error.name === "MongoServerError" && error.code === 11000)) {
+        throw new BadRequestException("Email already exists");
+      }
+      throw new InternalServerErrorException("Failed to create user");
+    }
   }
 
   @Put(":id")

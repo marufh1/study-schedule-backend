@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { EnergyLevel } from "src/energy-levels/energy-level.schema";
 import { Schedule } from "src/schedules/schedule.schema";
-import { Task } from "src/tasks/task.schema";
+import { TaskDocument } from "src/tasks/task.schema";
 import { EnergyLevelService } from "../energy-levels/energy-levels.service";
 import { ScheduleService } from "../schedules/schedules.service";
 import { TaskService } from "../tasks/tasks.service";
@@ -41,7 +41,7 @@ export class OptimizerService {
         }));
 
       // Get user's incomplete tasks
-      const tasks: Task[] = await this.taskService.findIncompleteTasksByUserId(userId);
+      const tasks: TaskDocument[] = await this.taskService.findIncompleteTasksByUserId(userId);
       const studyTasks: StudyTask[] = tasks.map((t) => ({
         id: t._id.toString(),
         title: t.title,

@@ -6,8 +6,8 @@ export type EnergyLevelDocument = EnergyLevel & Document;
 
 @Schema()
 export class EnergyLevel {
-  @Prop({ type: mongoose.Types.ObjectId, auto: true })
-  _id: mongoose.Types.ObjectId;
+  // @Prop({ type: mongoose.Types.ObjectId, auto: true })
+  // _id: mongoose.Types.ObjectId;
 
   @Prop({ required: true })
   day: string; // 'MONDAY', 'TUESDAY', etc.

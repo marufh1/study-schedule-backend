@@ -6,8 +6,8 @@ export type TaskDocument = Task & Document;
 
 @Schema()
 export class Task {
-  @Prop({ type: mongoose.Types.ObjectId, auto: true })
-  _id: mongoose.Types.ObjectId;
+  // @Prop({ type: mongoose.Types.ObjectId, auto: true })
+  // _id: mongoose.Types.ObjectId;
 
   @Prop({ required: true })
   title: string;

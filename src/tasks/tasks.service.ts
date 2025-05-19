@@ -15,7 +15,7 @@ export class TaskService {
     return this.taskModel.find({ userId: userId }).exec();
   }
 
-  async findIncompleteTasksByUserId(userId: string): Promise<Task[]> {
+  async findIncompleteTasksByUserId(userId: string): Promise<TaskDocument[]> {
     return this.taskModel
       .find({
         userId: userId,
