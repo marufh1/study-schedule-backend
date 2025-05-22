@@ -354,9 +354,69 @@ export class GeneticAlgorithm {
     };
   }
 
+  // NEW METHOD: Validate and fix a schedule to ensure no task exceeds its estimated hours
+  private validateSchedule(schedule: StudySchedule): StudySchedule {
+    const taskHoursMap = new Map<any, number>();
+    const validatedBlocks: StudyBlock[] = [];
+
+    // First pass: calculate total hours assigned to each task
+    schedule.blocks.forEach((block) => {
+      const taskId = block.task?.id;
+      if (taskId) {
+        const currentHours = taskHoursMap.get(taskId) || 0;
+        taskHoursMap.set(taskId, currentHours + block.hoursAssigned);
+      }
+    });
+
+    // Second pass: adjust blocks if necessary to ensure estimated hours aren't exceeded
+    schedule.blocks.forEach((block) => {
+      const taskId = block.task?.id;
+      if (!taskId) {
+        validatedBlocks.push(block);
+        return;
+      }
+
+      const task = this.tasks.find((t) => t.id === taskId);
+      if (!task) {
+        validatedBlocks.push(block);
+        return;
+      }
+
+      const totalAssigned = taskHoursMap.get(taskId) || 0;
+
+      if (totalAssigned > task.estimatedHours) {
+        // Need to adjust this block's hours
+        const excess = totalAssigned - task.estimatedHours;
+        const adjustedHours = Math.max(0, block.hoursAssigned - excess);
+
+        // Update the taskHoursMap for future blocks
+        taskHoursMap.set(taskId, totalAssigned - (block.hoursAssigned - adjustedHours));
+
+        validatedBlocks.push({
+          ...block,
+          hoursAssigned: adjustedHours,
+        });
+      } else {
+        // No adjustment needed
+        validatedBlocks.push(block);
+      }
+    });
+
+    // Remove blocks with zero hours
+    const filteredBlocks = validatedBlocks.filter((block) => block.hoursAssigned > 0);
+
+    return {
+      blocks: filteredBlocks,
+      fitness: schedule.fitness,
+    };
+  }
+
   // Run the genetic algorithm to find an optimal schedule
   public optimize(): StudySchedule {
     let population = this.initializePopulation();
+    console.log({ len: population.length });
+    // Validate initial population
+    population = population.map((schedule) => this.validateSchedule(schedule));
 
     // Calculate initial fitness
     population.forEach((schedule) => {
@@ -393,17 +453,36 @@ export class GeneticAlgorithm {
         // Mutation
         const mutatedOffspring = this.mutate(offspring);
 
-        // Calculate fitness
-        mutatedOffspring.fitness = this.calculateFitness(mutatedOffspring);
+        // Validate schedule to ensure no task exceeds its estimated hours
+        const validatedOffspring = this.validateSchedule(mutatedOffspring);
 
-        nextGeneration.push(mutatedOffspring);
+        // Calculate fitness
+        validatedOffspring.fitness = this.calculateFitness(validatedOffspring);
+
+        nextGeneration.push(validatedOffspring);
       }
 
       // Update population
       population = nextGeneration;
     }
 
-    // Return the best schedule
-    return population.sort((a, b) => b.fitness - a.fitness)[0];
+    // Find the best schedule
+    const bestSchedule = population.sort((a, b) => b.fitness - a.fitness)[0];
+    console.log({
+      fitness0: population.sort((a, b) => b.fitness - a.fitness)[0].fitness,
+      fitness1: population.sort((a, b) => b.fitness - a.fitness)[1].fitness,
+      fitness2: population.sort((a, b) => b.fitness - a.fitness)[2].fitness,
+      fitness3: population.sort((a, b) => b.fitness - a.fitness)[3].fitness,
+    });
+
+    // Final validation to ensure the best schedule is valid
+    const validatedBestSchedule = this.validateSchedule(bestSchedule);
+    validatedBestSchedule.fitness = this.calculateFitness(validatedBestSchedule);
+    console.log({ validatedBestScheduleFitness: validatedBestSchedule.fitness });
+
+    return validatedBestSchedule;
   }
 }
+
+// Collapse all methods and properties in a class.
+// CTRL K + CTRL 0 => minimize all

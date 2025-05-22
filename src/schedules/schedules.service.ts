@@ -15,6 +15,10 @@ export class ScheduleService {
     return this.scheduleModel.find({ userId: userId }).exec();
   }
 
+  async findByUserIdExceptType(userId: string, excludeType: string): Promise<Schedule[]> {
+    return this.scheduleModel.find({ userId: userId, type: { $ne: excludeType } }).exec();
+  }
+
   async findByUserIdAndDateRange(userId: string, startDate: Date, endDate: Date): Promise<Schedule[]> {
     return this.scheduleModel
       .find({
@@ -31,6 +35,17 @@ export class ScheduleService {
   async create(schedule: Partial<Schedule>): Promise<Schedule> {
     const newSchedule = new this.scheduleModel(schedule);
     return newSchedule.save();
+  }
+
+  async createMany(schedules: Partial<Schedule>[]): Promise<Schedule[]> {
+    // Ensure all required fields are present
+    schedules.forEach((schedule) => {
+      if (!schedule.day || !schedule.type || !schedule.startTime || !schedule.endTime || !schedule.date || !schedule.userId) {
+        throw new Error("Missing required fields in schedule");
+      }
+    });
+    // Type assertion to help TypeScript understand the return type
+    return this.scheduleModel.insertMany(schedules) as unknown as Promise<Schedule[]>;
   }
 
   async update(id: string, schedule: Partial<Schedule>): Promise<Schedule | null> {

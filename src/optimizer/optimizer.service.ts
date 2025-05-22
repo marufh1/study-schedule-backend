@@ -20,7 +20,6 @@ export class OptimizerService {
     try {
       // Get user's work and class schedules
       const schedules: Schedule[] = await this.scheduleService.findByUserIdAndDateRange(userId, startDate, endDate);
-
       // Separate work and class schedules
       const workSchedules = schedules
         .filter((s) => s.type === "WORK")

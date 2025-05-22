@@ -16,6 +16,11 @@ export class ScheduleController {
     return this.scheduleService.findByUserId(userId);
   }
 
+  @Get("user/:userId/exclude/:excludeType")
+  findByUserIdExceptType(@Param("userId") userId: string, @Param("excludeType") excludeType: string): Promise<Schedule[]> {
+    return this.scheduleService.findByUserIdExceptType(userId, excludeType);
+  }
+
   @Get("user/:userId/date-range")
   findByUserIdAndDateRange(
     @Param("userId") userId: string,
@@ -33,6 +38,11 @@ export class ScheduleController {
   @Post()
   create(@Body() schedule: Partial<Schedule>): Promise<Schedule> {
     return this.scheduleService.create(schedule);
+  }
+
+  @Post("bulk")
+  createMany(@Body() schedules: Partial<Schedule>[]): Promise<Schedule[]> {
+    return this.scheduleService.createMany(schedules);
   }
 
   @Put(":id")

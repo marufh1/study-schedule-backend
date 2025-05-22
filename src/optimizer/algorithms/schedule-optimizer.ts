@@ -1,9 +1,4 @@
-import {
-  GeneticAlgorithm,
-  StudySchedule,
-  StudyTask,
-  TimeSlot,
-} from './genetic-algorithm';
+import { GeneticAlgorithm, StudySchedule, StudyTask, TimeSlot } from "./genetic-algorithm";
 
 export class ScheduleOptimizer {
   // Map day name to day of week (0-6, where 0 is Sunday)
@@ -19,7 +14,7 @@ export class ScheduleOptimizer {
 
   // Convert time string to hours (e.g., "09:30" -> 9.5)
   private static timeToHours(timeString: string): number {
-    const [hours, minutes] = timeString.split(':').map(Number);
+    const [hours, minutes] = timeString.split(":").map(Number);
     return hours + minutes / 60;
   }
 
@@ -49,7 +44,7 @@ export class ScheduleOptimizer {
       level: number;
     }>,
     startDate: Date,
-    endDate: Date,
+    endDate: Date
   ): StudySchedule {
     // Generate all dates between start and end date
     const dates: Date[] = [];
@@ -64,39 +59,24 @@ export class ScheduleOptimizer {
 
     // Define standard time slots for each day
     const standardTimeSlots = [
-      { startTime: '06:00', endTime: '08:00' },
-      { startTime: '08:00', endTime: '10:00' },
-      { startTime: '10:00', endTime: '12:00' },
-      { startTime: '12:00', endTime: '14:00' },
-      { startTime: '14:00', endTime: '16:00' },
-      { startTime: '16:00', endTime: '18:00' },
-      { startTime: '18:00', endTime: '20:00' },
-      { startTime: '20:00', endTime: '22:00' },
+      { startTime: "06:00", endTime: "08:00" },
+      { startTime: "08:00", endTime: "10:00" },
+      { startTime: "10:00", endTime: "12:00" },
+      { startTime: "12:00", endTime: "14:00" },
+      { startTime: "14:00", endTime: "16:00" },
+      { startTime: "16:00", endTime: "18:00" },
+      { startTime: "18:00", endTime: "20:00" },
+      { startTime: "20:00", endTime: "22:00" },
+      { startTime: "22:00", endTime: "00:00" },
     ];
 
     // Process each date
     for (const date of dates) {
-      const dayName = [
-        'SUNDAY',
-        'MONDAY',
-        'TUESDAY',
-        'WEDNESDAY',
-        'THURSDAY',
-        'FRIDAY',
-        'SATURDAY',
-      ][date.getDay()];
+      const dayName = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"][date.getDay()];
 
       // Get work and class schedules for this day
-      const workForDay = workSchedules.filter(
-        (w) =>
-          w.day === dayName ||
-          (w.date && w.date.toDateString() === date.toDateString()),
-      );
-      const classesForDay = classSchedules.filter(
-        (c) =>
-          c.day === dayName ||
-          (c.date && c.date.toDateString() === date.toDateString()),
-      );
+      const workForDay = workSchedules.filter((w) => w.day === dayName || (w.date && w.date.toDateString() === date.toDateString()));
+      const classesForDay = classSchedules.filter((c) => c.day === dayName || (c.date && c.date.toDateString() === date.toDateString()));
 
       // Get energy level for this day
       const energyForDay = energyLevels.filter((e) => e.day === dayName);
@@ -105,22 +85,8 @@ export class ScheduleOptimizer {
       for (const slot of standardTimeSlots) {
         // Check if slot overlaps with any work or class schedule
         const isOverlapping =
-          workForDay.some((work) =>
-            this.isTimeOverlapping(
-              slot.startTime,
-              slot.endTime,
-              work.startTime,
-              work.endTime,
-            ),
-          ) ||
-          classesForDay.some((cls) =>
-            this.isTimeOverlapping(
-              slot.startTime,
-              slot.endTime,
-              cls.startTime,
-              cls.endTime,
-            ),
-          );
+          workForDay.some((work) => this.isTimeOverlapping(slot.startTime, slot.endTime, work.startTime, work.endTime)) ||
+          classesForDay.some((cls) => this.isTimeOverlapping(slot.startTime, slot.endTime, cls.startTime, cls.endTime));
 
         if (!isOverlapping) {
           // Find energy level for this time slot
@@ -132,19 +98,17 @@ export class ScheduleOptimizer {
             let timeSlotCategory: string;
 
             if (hour >= 5 && hour < 12) {
-              timeSlotCategory = 'MORNING';
+              timeSlotCategory = "MORNING";
             } else if (hour >= 12 && hour < 17) {
-              timeSlotCategory = 'AFTERNOON';
+              timeSlotCategory = "AFTERNOON";
             } else if (hour >= 17 && hour < 21) {
-              timeSlotCategory = 'EVENING';
+              timeSlotCategory = "EVENING";
             } else {
-              timeSlotCategory = 'NIGHT';
+              timeSlotCategory = "NIGHT";
             }
 
             // Find matching energy level
-            const matchingEnergy = energyForDay.find(
-              (e) => e.timeSlot === timeSlotCategory,
-            );
+            const matchingEnergy = energyForDay.find((e) => e.timeSlot === timeSlotCategory);
             if (matchingEnergy) {
               energyLevel = matchingEnergy.level;
             }
@@ -162,19 +126,14 @@ export class ScheduleOptimizer {
         }
       }
     }
-
+    // console.log({ tasks, availableTimeSlots });
     // Use genetic algorithm to optimize the schedule
     const ga = new GeneticAlgorithm(tasks, availableTimeSlots);
     return ga.optimize();
   }
 
   // Check if two time ranges overlap
-  private static isTimeOverlapping(
-    start1: string,
-    end1: string,
-    start2: string,
-    end2: string,
-  ): boolean {
+  private static isTimeOverlapping(start1: string, end1: string, start2: string, end2: string): boolean {
     const s1 = this.timeToHours(start1);
     const e1 = this.timeToHours(end1);
     const s2 = this.timeToHours(start2);
